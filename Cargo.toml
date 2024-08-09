@@ -1,0 +1,28 @@
+[package]
+name = "hyperclip"
+version = "0.1.0"
+edition = "2021"
+authors = ["Albert Shefner <dev_n0emo@tuta.io>"]
+license = "MIT"
+homepage = "https://github.com/n0emo/hyperclip"
+description = "An unusual distortion plugin"
+
+[workspace]
+members = ["xtask"]
+
+[lib]
+crate-type = ["cdylib"]
+
+[dependencies]
+# Remove the `assert_process_allocs` feature to allow allocations on the audio
+# thread in debug builds.
+nih_plug = { git = "https://github.com/robbert-vdh/nih-plug.git", features = ["assert_process_allocs"] }
+
+[profile.release]
+lto = "thin"
+strip = "symbols"
+
+[profile.profiling]
+inherits = "release"
+debug = true
+strip = "none"
