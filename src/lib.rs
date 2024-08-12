@@ -1,9 +1,11 @@
+use nih_plug::prelude::*;
+use nih_plug_iced::IcedState;
 use std::sync::Arc;
 
-use nih_plug::prelude::*;
+mod editor;
 
-#[derive(Enum, PartialEq)]
-enum Mode {
+#[derive(Enum, PartialEq, Eq, Debug, Clone, Copy)]
+pub enum Mode {
     Linear,
     Exponential,
     Logarithmic,
@@ -11,18 +13,21 @@ enum Mode {
 }
 
 #[derive(Params)]
-struct HyperclipParams {
+pub struct HyperclipParams {
     #[id = "input-gain"]
-    input_gain: FloatParam,
+    pub input_gain: FloatParam,
 
     #[id = "output-gain"]
-    output_gain: FloatParam,
+    pub output_gain: FloatParam,
 
     #[id = "drive"]
-    drive: FloatParam,
+    pub drive: FloatParam,
 
     #[id = "mode"]
-    mode: EnumParam<Mode>,
+    pub mode: EnumParam<Mode>,
+
+    #[persist = "editor-state"]
+    editor_state: Arc<IcedState>,
 }
 
 impl Default for HyperclipParams {
@@ -58,6 +63,7 @@ impl Default for HyperclipParams {
             output_gain: gain("Output gain"),
             drive,
             mode,
+            editor_state: editor::default_state(),
         }
     }
 }
@@ -100,6 +106,10 @@ impl Plugin for Hyperclip {
 
     fn params(&self) -> Arc<dyn Params> {
         self.params.clone()
+    }
+
+    fn editor(&mut self, _async_executor: AsyncExecutor<Self>) -> Option<Box<dyn Editor>> {
+        editor::create(self.params.clone(), self.params.editor_state.clone())
     }
 
     fn process(
