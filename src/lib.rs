@@ -137,7 +137,7 @@ impl Plugin for Hyperclip {
                     Mode::Logarithmic => (ax + 1.0).ln(),
                     Mode::Sine => ax.sin(),
                 };
-                let pow_mul = (-1 as i32).pow(arg.floor() as u32) as f32;
+                let pow_mul = (-1_i32).pow(arg.floor() as u32) as f32;
                 x = pow_mul * (arg % 2.0 - 1.0) + 1.0;
 
                 x *= output_gain * sign;

@@ -87,12 +87,8 @@ impl IcedEditor for HyperclipEditor {
             nih_plug_iced::Radio::new(mode, label, selected, Message::RadioSelected)
         };
 
-        let vertical_space = |amount: u16| {
-            nih_plug_iced::Space::new(
-                Length::Fill,
-                Length::Units(amount)
-            )
-        };
+        let vertical_space =
+            |amount: u16| nih_plug_iced::Space::new(Length::Fill, Length::Units(amount));
 
         Column::new()
             .align_items(Alignment::Center)
@@ -106,14 +102,12 @@ impl IcedEditor for HyperclipEditor {
                     .vertical_alignment(alignment::Vertical::Bottom),
             )
             .push(vertical_space(13))
-
             .push(regular_text("Input gain"))
             .push(
                 nih_widgets::ParamSlider::new(&mut self.input_gain_state, &self.params.input_gain)
                     .map(Message::ParamUpdate),
             )
             .push(vertical_space(13))
-
             .push(regular_text("Output gain"))
             .push(
                 nih_widgets::ParamSlider::new(
@@ -123,14 +117,12 @@ impl IcedEditor for HyperclipEditor {
                 .map(Message::ParamUpdate),
             )
             .push(vertical_space(13))
-
             .push(regular_text("Drive"))
             .push(
                 nih_widgets::ParamSlider::new(&mut self.drive_state, &self.params.drive)
                     .map(Message::ParamUpdate),
             )
             .push(vertical_space(13))
-
             .push(regular_text("Mode"))
             .push(
                 Column::new()
