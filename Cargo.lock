@@ -660,7 +660,7 @@ dependencies = [
 
 [[package]]
 name = "hyperclip"
-version = "0.1.0"
+version = "1.0.0"
 dependencies = [
  "nih_plug",
  "nih_plug_iced",
@@ -2056,7 +2056,7 @@ checksum = "3ae8337f8a065cfc972643663ea4279e04e7256de865aa66fe25cec5fb912d3f"
 
 [[package]]
 name = "xtask"
-version = "0.1.0"
+version = "1.0.0"
 dependencies = [
  "nih_plug_xtask",
 ]

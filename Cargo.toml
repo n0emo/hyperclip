@@ -1,6 +1,6 @@
 [package]
 name = "hyperclip"
-version = "0.1.0"
+version = "1.0.0"
 edition = "2021"
 authors = ["Albert Shefner <dev_n0emo@tuta.io>"]
 license = "MIT"

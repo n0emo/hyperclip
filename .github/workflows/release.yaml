@@ -1,0 +1,122 @@
+name: Release
+
+on:
+  push:
+    tags:
+      - 'v*'
+  workflow_dispatch:
+
+env:
+  CARGO_TERM_COLOR: always
+
+jobs:
+  build:
+    name: Build ${{ matrix.os }}
+    runs-on: ${{ matrix.os }}
+    strategy:
+      fail-fast: false
+      matrix:
+        include:
+          - os: windows-latest
+            target: x86_64-pc-windows-msvc
+            platform: windows
+          - os: ubuntu-latest
+            target: x86_64-unknown-linux-gnu
+            platform: linux
+          - os: macos-latest
+            target: x86_64-apple-darwin
+            platform: macos
+
+    steps:
+      - name: Checkout code
+        uses: actions/checkout@v4
+        with:
+          submodules: recursive
+
+      - name: Install Rust toolchain
+        uses: dtolnay/rust-toolchain@stable
+        with:
+          targets: ${{ matrix.target }}
+
+      - name: Cache Cargo dependencies
+        uses: actions/cache@v4
+        with:
+          path: |
+            ~/.cargo/registry
+            ~/.cargo/git
+            target
+          key: ${{ runner.os }}-cargo-${{ hashFiles('**/Cargo.lock') }}
+          restore-keys: |
+            ${{ runner.os }}-cargo-
+
+      - name: Install Linux dependencies
+        if: matrix.os == 'ubuntu-latest'
+        run: |
+          sudo apt-get update
+          sudo apt-get install -y \
+          libasound2-dev \
+          libgl1-mesa-dev \
+          libxcursor-dev \
+          libxinerama-dev \
+          libxrandr-dev \
+          libx11-xcb-dev \
+          libxcb-dri2-0-dev \
+          libxcb-icccm4-dev \
+          libxcb-keysyms1-dev \
+          libxcb-shape0-dev \
+          libxcb-xfixes0-dev \
+          libxcb-xkb-dev \
+          libxcb1-dev \
+          libxkbcommon-dev \
+          libxkbcommon-x11-dev
+
+      - name: Build with cargo xtask
+        run: cargo xtask bundle hyperclip
+
+      - name: Create archives on Windows
+        if: runner.os == 'Windows'
+        shell: pwsh
+        run: |
+          cd target\bundled
+          Compress-Archive -Path "hyperclip.vst3" -DestinationPath "hyperclip-${{ github.ref_name }}-${{ matrix.platform }}-vst3.zip"
+          Compress-Archive -Path "hyperclip.clap" -DestinationPath "hyperclip-${{ github.ref_name }}-${{ matrix.platform }}-clap.zip"
+
+      - name: Create archives on UNIX
+        if: runner.os != 'Windows'
+        run: |
+          cd target/bundled
+          zip -r "hyperclip-${{ github.ref_name }}-${{ matrix.platform }}-vst3.zip" hyperclip.vst3
+          zip -r "hyperclip-${{ github.ref_name }}-${{ matrix.platform }}-clap.zip" hyperclip.clap
+
+      - name: Upload artifacts
+        uses: actions/upload-artifact@v4
+        with:
+          name: ${{ matrix.platform }}-artifacts
+          path: target/bundled/*.zip
+          if-no-files-found: error
+
+  release:
+    name: Create Release
+    needs: build
+    runs-on: ubuntu-latest
+    permissions:
+      contents: write
+
+    steps:
+      - name: Download all artifacts
+        uses: actions/download-artifact@v4
+        with:
+          pattern: "*-artifacts"
+          path: release
+          merge-multiple: true
+
+      - name: Create GitHub Release
+        uses: softprops/action-gh-release@v2
+        with:
+          name: ${{ github.ref_name }}
+          files: release/*
+          generate_release_notes: true
+          draft: false
+          prerelease: ${{ contains(github.ref_name, '-') }}
+        env:
+          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
